@@ -3,7 +3,7 @@ on:
   schedule:
     - cron: "*/15 * * * *"
   push:
-    paths: ["queue/**"]
+    paths: ["queue/**", "media/**"]
   workflow_dispatch:
 permissions:
   contents: write
@@ -22,6 +22,12 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python3 scripts/threads_post.py
+      - name: 예약 확인 (글을 새로 넣었을 때)
+        if: github.event_name == 'push'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python3 scripts/preflight.py
       - name: 상태 저장
         run: |
           git config user.name "stressbbang-bot"
