@@ -1,1 +1,20 @@
-{"threads": [], "youtube": [], "init": {}, "alerts": {}}
+{
+  "alerts": {},
+  "init": {
+    "threads": true,
+    "youtube": true
+  },
+  "threads": [
+    "18102044741433567",
+    "18148835662561573",
+    "18117036119583816",
+    "18126675484864856",
+    "18109746040921588"
+  ],
+  "youtube": [
+    "Ugz5tIWTgvhTHfgtTW94AaABAg",
+    "UgwnMH5cR0jri3dAaxx4AaABAg",
+    "UgzvWTGegjjglvx2tGx4AaABAg"
+  ],
+  "youtube_channel_id": "UCKDfuAYzBJ95HNTTkQmwFEg"
+}
