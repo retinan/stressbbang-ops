@@ -4,5 +4,7 @@
   "threads_token_days": 60,
   "youtube_handle": "@stressbbang",
   "youtube_channel_id": "",
-  "late_warn_minutes": 120
+  "late_warn_minutes": 120,
+  "ig_token_issued": "2026-11-09",
+  "ig_token_days": 60
 }

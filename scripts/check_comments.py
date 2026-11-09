@@ -1,9 +1,9 @@
 """새 댓글을 텔레그램으로. 스레드 답글 + 유튜브(쇼츠) 댓글. 처음 실행 때 있던 댓글은 건너뛴다."""
 from datetime import date, datetime, timedelta
-from common import CONFIG, GRAPH, HttpError, env, http, load, now_kst, save, short, telegram
+from common import CONFIG, GRAPH, IG, HttpError, env, http, load, now_kst, save, short, telegram
 
 state = load("state/seen.json", {"threads": [], "youtube": [], "init": {}, "alerts": {}})
-for k, v in (("threads", []), ("youtube", []), ("init", {}), ("alerts", {})):
+for k, v in (("threads", []), ("youtube", []), ("instagram", []), ("init", {}), ("alerts", {})):
     state.setdefault(k, v)
 out, notes = [], []
 
@@ -74,16 +74,43 @@ def youtube():
     remember("youtube", ids)
 
 
+def instagram():
+    token = env("IG_TOKEN", required=False)
+    if not token:
+        return
+    me = http("GET", f"{IG}/me", {"fields": "username", "access_token": token})
+    media = http("GET", f"{IG}/me/media", {"fields": "id,caption,permalink,timestamp", "limit": 20,
+                                         "access_token": token}).get("data", [])
+    new, ids = [], []
+    for m in media:
+        cs = http("GET", f"{IG}/{m['id']}/comments", {"fields": "id,text,username,timestamp",
+                                                     "access_token": token}).get("data", [])
+        for c in cs:
+            ids.append(c["id"])
+            if c["id"] in state["instagram"] or c.get("username") == me.get("username"):
+                continue
+            new.append(f"💬 [인스타] {short(c.get('text'), 120)} — @{c.get('username')}\n   ↳ 릴스: {short(m.get('caption'), 40)}\n   {m.get('permalink','')}")
+    if not state["init"].get("instagram"):
+        state["init"]["instagram"] = True
+        notes.append(f"인스타 알림 시작 (기존 댓글 {len(ids)}개는 건너뜀)")
+        new = []
+    out.extend(new)
+    remember("instagram", ids)
+
+
 def token_age():
-    issued = date.fromisoformat(CONFIG["threads_token_issued"])
-    left = CONFIG.get("threads_token_days", 60) - (now_kst().date() - issued).days
     today = now_kst().date().isoformat()
-    if left <= 7 and state["alerts"].get("token") != today:
-        state["alerts"]["token"] = today
-        notes.append(f"⏰ 스레드 토큰이 {left}일 뒤 만료돼요. 새 토큰을 받아 THREADS_TOKEN을 바꾸고 config.json의 날짜를 고쳐 주세요.")
+    for name, key, secret in (("스레드", "threads", "THREADS_TOKEN"), ("인스타", "ig", "IG_TOKEN")):
+        if not CONFIG.get(f"{key}_token_issued"):
+            continue
+        issued = date.fromisoformat(CONFIG[f"{key}_token_issued"])
+        left = CONFIG.get(f"{key}_token_days", 60) - (now_kst().date() - issued).days
+        if left <= 7 and state["alerts"].get(f"token_{key}") != today:
+            state["alerts"][f"token_{key}"] = today
+            notes.append(f"⏰ {name} 토큰이 {left}일 뒤 만료돼요. 새 토큰을 받아 {secret}를 바꾸고 config.json의 {key}_token_issued 날짜를 고쳐 주세요.")
 
 
-for fn in (threads, youtube, token_age):
+for fn in (threads, instagram, youtube, token_age):
     try:
         fn()
     except Exception as e:

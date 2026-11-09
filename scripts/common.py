@@ -82,3 +82,15 @@ def telegram(text):
 def short(s, n=80):
     s = " ".join((s or "").split())
     return s if len(s) <= n else s[: n - 1] + "…"
+
+IG = "https://graph.instagram.com"
+
+
+def channels_of(post):
+    """예약 한 줄이 올라갈 채널 목록. 예전 형식("channel": "threads")도 받는다."""
+    ch = post.get("channels") or [post.get("channel", "threads")]
+    return [c for c in ch if c in ("threads", "instagram")]
+
+
+def state_key(pid, ch):
+    return pid if ch == "threads" else f"{pid}@{ch}"

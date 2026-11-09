@@ -1,5 +1,5 @@
 """연결 시험: 토큰은 출력하지 않고, 어떤 계정과 연결됐는지만 텔레그램으로."""
-from common import CONFIG, GRAPH, HttpError, env, http, short, telegram
+from common import CONFIG, GRAPH, IG, HttpError, env, http, short, telegram
 
 lines = ["🔌 스트레스빵 자동화 연결 시험"]
 token = env("THREADS_TOKEN")
@@ -17,6 +17,24 @@ try:
     lines.append(f"✅ 게시 권한 확인 (24시간 사용량: {lim.get('data',[{}])[0].get('quota_usage','?')})")
 except HttpError as e:
     lines.append(f"❌ 스레드 연결 실패: {short(e.body, 200)}")
+ig = env("IG_TOKEN", required=False)
+if ig:
+    try:
+        me = http("GET", f"{IG}/me", {"fields": "username,account_type", "access_token": ig})
+        lines.append(f"✅ 인스타: @{me.get('username')} ({me.get('account_type')})")
+        media = http("GET", f"{IG}/me/media", {"fields": "id", "limit": 1, "access_token": ig}).get("data", [])
+        if media:
+            try:
+                http("GET", f"{IG}/{media[0]['id']}/comments", {"fields": "id", "access_token": ig})
+                lines.append("✅ 인스타 댓글 읽기 권한 있음")
+            except HttpError as e:
+                lines.append(f"❌ 인스타 댓글 읽기 권한 없음: {short(e.body, 120)}")
+        lim = http("GET", f"{IG}/me/content_publishing_limit", {"fields": "quota_usage", "access_token": ig})
+        lines.append(f"✅ 릴스 게시 권한 확인 (24시간 사용량: {lim.get('data',[{}])[0].get('quota_usage','?')})")
+    except HttpError as e:
+        lines.append(f"❌ 인스타 연결 실패: {short(e.body, 200)}")
+else:
+    lines.append("— 인스타 토큰(IG_TOKEN) 없음")
 try:
     key = env("YOUTUBE_API_KEY")
     r = http("GET", "https://www.googleapis.com/youtube/v3/channels",
