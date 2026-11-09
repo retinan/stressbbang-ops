@@ -1,9 +1,11 @@
 {
   "alerts": {},
   "init": {
+    "instagram": true,
     "threads": true,
     "youtube": true
   },
+  "instagram": [],
   "threads": [
     "18102044741433567",
     "18148835662561573",
