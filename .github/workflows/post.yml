@@ -1,7 +1,7 @@
 name: 예약 게시 (스레드·릴스)
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "1,11,21,31,41,51 * * * *"
   push:
     paths: ["queue/**", "media/**"]
   workflow_dispatch:
