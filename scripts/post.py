@@ -102,6 +102,11 @@ def main():
             if key in done:
                 continue
             label, send = SENDERS[ch]
+            give_up = CONFIG.get("give_up_minutes", 360)
+            if late > give_up:
+                if not post.get(f"_gaveup_{ch}"):
+                    print(f"[{key}] 예약보다 {late}분 지남 → 자동으로는 안 올림(몰아 올리기 방지).")
+                continue
             try:
                 if post.get("media"):
                     ok, info = head_ok(media_url(post["media"]))
@@ -118,7 +123,7 @@ def main():
                 print(f"[{key}] 올림 {link}")
             except Exception as e:
                 print(f"[{key}] 실패: {e}")
-                telegram(f"⚠️ [{label} 올리기 실패] {pid}\n{short(str(e), 300)}\n다음 회차(15분 뒤)에 다시 시도해요.")
+                telegram(f"⚠️ [{label} 올리기 실패] {pid}\n{short(str(e), 300)}\n다음 회차에 다시 시도해요(예약 6시간이 지나면 멈춰요).")
     if changed:
         save("state/posted.json", state)
 
